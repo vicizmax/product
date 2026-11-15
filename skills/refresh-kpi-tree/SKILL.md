@@ -1,197 +1,166 @@
 ---
-name: refresh-kpi-tree
+name: refresh-kpi-page
 description: >-
-  Refresh the Growth KPI tree HTML with live sales-led and self-serve GRR/NRR
-  from Redshift. Use when someone says "update the KPI tree", "refresh the KPI
-  HTML", "pull GRR NRR onto the page", "/refresh-kpi-tree", or "update
-  growth-kpi-tree html". Two books only (sales-led vs Stripe Team Monthly).
-  Does not publish to Confluence or Slack. Does not invent Max/Team Monthly
-  operating numbers.
+  Refresh the shareable KPI page HTML with live retention rates from the
+  warehouse. Use when someone says "update the KPI tree", "refresh the KPI
+  HTML", "pull the rates onto the page", "/refresh-kpi-page", or "update the
+  KPI html". Updates only the books listed in the config. Does not publish.
+  Does not invent numbers for sections marked leave-alone.
 ---
 
-# Refresh KPI tree HTML
+# Refresh KPI page HTML
 
-Rewrite `DATA.books` in the shareable KPI page from Redshift. Leave operating-tree snapshots (Max, Mixpanel, stubs) alone.
+> **Template.** Fill in every `{{TOKEN}}` in the config block before installing this skill. Leave runtime values in `<angle brackets>` alone — the agent resolves those on each run. Do not invent tables, formulas, targets, or rates that are not in the config. The query below is empty on purpose.
 
-## Defaults (tell the user)
+Rewrite `{{BOOKS_OBJECT_PATH}}` in the shareable KPI page from the warehouse. Leave `{{LEAVE_ALONE}}` alone.
 
-- Saving the skill to `.claude/skills/refresh-kpi-tree/` per the team default
-- Patching `publish/growth-kpi-tree-YYYY-MM-DD.html` (latest dated file) — not a new file
-- **Not** publishing to Confluence or Slack
-- **Not** blending the two books into a combined GRR/NRR on the stakeholder cards
-- **Not** putting MoM on the stakeholder strip (store MoM on each book for the grain tab only)
+## Config — fill in once
 
-## Do not
-
-- Invent Max 90-day, AutoScan, or user/project staircases
-- Use `fct_sales_combined_arr_waterfall_yearly` as the displayed KR (store `combinedGrr` / `combinedNrr` only as the “do not use” figure)
-- Take `max(period_end_date)` — that table has future month buckets through 2027. Use `last_day(current_date)`
-- Overwrite self-serve from Laura’s Metabase 397 query
-- Auto-publish
-
-## Page
-
-Glob `publish/growth-kpi-tree-*.html` and edit the latest. The JSON lives in `<script id="data">`. Patch the `books` object in place. The page JS renders cards from that object — do not hardcode numbers in HTML.
-
-## Warehouse
-
-Atlan `query_assets_tool`:
-
-- `connection_qualified_name`: `default/redshift/1720789348`
-- `database`: `sonarsource`
-- `schema`: `sonar`
-
-Fallback: same SQL on SonarData if Atlan is down. If both fail, stop and name the gap — do not invent.
+| Token | Replace with |
+|---|---|
+| `{{KPI_PAGE_GLOB}}` | Glob for the dated HTML page. Edit the latest file. Do not create a new file. |
+| `{{DATA_SCRIPT_ID}}` | `id` of the `<script>` tag that holds the page JSON. |
+| `{{BOOKS_OBJECT_PATH}}` | Object inside that JSON to patch in place. The page JS renders cards from it. |
+| `{{LEAVE_ALONE}}` | Sections, snapshots, and staircases this skill must not rewrite or invent. |
+| `{{WAREHOUSE_QUERY_TOOL}}` | Tool that runs the warehouse query. Match by name. Do not hardcode a server id. |
+| `{{WAREHOUSE_CONNECTION}}` | Connection id the tool expects. |
+| `{{WAREHOUSE_DATABASE}}` | Database. |
+| `{{WAREHOUSE_SCHEMA}}` | Schema. |
+| `{{WAREHOUSE_FALLBACK}}` | Second way to run the same SQL if the first tool is down. If both fail, stop. |
+| `{{RATE_1}}` | First rate the cards show (name people use, such as GRR). |
+| `{{RATE_2}}` | Second rate the cards show (name people use, such as NRR). |
+| `{{STAKEHOLDER_WINDOW}}` | Window shown on the stakeholder cards (for example year over year). |
+| `{{GRAIN_WINDOW}}` | Finer window stored on each book for the grain tab only. Do not put it on the stakeholder strip. |
+| `{{DO_NOT_PUBLISH}}` | Destinations this skill must not publish to. |
+| `{{DISTRIBUTION_RULE}}` | How the file may be opened and shared. |
+| `{{PERIOD_RULE}}` | How to pick the period. Say so if a table contains future buckets and `max(period)` would be wrong. |
+| `{{DO_NOT_OVERWRITE_FROM}}` | A different definition or query that must not replace a book's numbers. Name the book and the source. |
+| `{{WRONG_DEFINITION}}` | A formula that looks close but must not be used for a displayed book. Say which book, and how you can tell it is wrong. |
+| `{{CLOSED_MONTH_CHECKS}}` | Closed periods whose rates are already agreed. Use them as a sanity check. Leave blank if you have none. |
+| `{{EXTRA_PATCH_RULES}}` | Other fields on the page to refresh from this same result. Leave blank to patch books only. |
+| `{{TARGET_LABEL}}` | Label for the target date. Targets are typed here. Do not pull them from the warehouse. |
+| `{{BASELINE_PERIOD}}` | Baseline period for the book that has one. |
+| `{{BASELINE_LABEL}}` | Label for that baseline. |
 
 ### Books
 
-| Book | Table | What it is |
-|---|---|---|
-| Sales-led | `cad_sonar_company_arr_monthly` (begin) + `fct_sales_company_arr_waterfall_yearly` (end / churn / downsell) | SQS + SQC Ent + SQC Team Annual. Storefront KR. **USD. Tableau ELT definition.** |
-| Self-serve | `sonar.fct_sales_online_arr_waterfall_yearly` (+ `_monthly`) | SQC Team Monthly / Stripe. **EUR actual** (not on Tableau ELT). |
-| Combined (do not display as KR) | `sonar.fct_sales_combined_arr_waterfall_yearly` | Blend. Store only for the “do not use” line. |
+One row per book the query returns. `Display` = yes means the stakeholder cards show it. A row with `Display` = no is stored only so the page can show a "do not use" figure. Do not blend display books into one combined rate on the cards.
 
-### Formula
+| Key | What it is | Display | Currency | Targets | Trend start | Formula |
+|---|---|---|---|---|---|---|
+| `{{BOOK_1_KEY}}` | {{BOOK_1_WHAT}} | yes | {{BOOK_1_CURRENCY}} | {{RATE_1}} `{{BOOK_1_RATE_1_TARGET}}`, {{RATE_2}} `{{BOOK_1_RATE_2_TARGET}}` | full returned trend | {{BOOK_1_FORMULA}} |
+| `{{BOOK_2_KEY}}` | {{BOOK_2_WHAT}} | yes | {{BOOK_2_CURRENCY}} | none (`null`) unless you fill `{{BOOK_2_RATE_1_TARGET}}` and `{{BOOK_2_RATE_2_TARGET}}` | {{BOOK_2_TREND_START}} | {{BOOK_2_FORMULA}} |
+| `{{DO_NOT_DISPLAY_KEY}}` | {{DO_NOT_DISPLAY_WHAT}} | no | {{DO_NOT_DISPLAY_CURRENCY}} | none | current period only | {{DO_NOT_DISPLAY_FORMULA}} |
 
-**Sales-led (Tableau ELT):** beginning book = companies with `period_ending_arr_usd > 0` in `cad_sonar_company_arr_monthly` on the date 12 months before `period_end_date`. Left-join yearly waterfall for those companies on `period_end_date`.
+Add or delete rows to match the page. Paste each formula in words (numerator, denominator, which table, which movement types). Do not leave another product's formula here.
 
-- **GRR** = `sum(begin_usd + downsell + churn) / sum(begin_usd)`
-- **NRR** = `sum(coalesce(waterfall prior_usd + growth_usd, 0)) / sum(begin_usd)`
-- `downsell` / `churn` from yearly waterfall `arr_growth_usd_actual` (`Downsell`; `Churn|Lost|Lapsed|Dormant`)
-- Do **not** use `(waterfall prior + growth − new) / waterfall prior` for this book — that is ~1pp above ELT NRR
+## Defaults (tell the user)
 
-Closed months should match ELT bars (Dec NRR **121.2%**, Jul **119.6%**). Current month can sit a few tenths above the extract while MTD. CAD itself may not yet have the current month — still use CAD for the *beginning* (12 months ago) and waterfall for *ending*.
+- Patching the latest file matching `{{KPI_PAGE_GLOB}}` — not a new file
+- **Not** publishing to `{{DO_NOT_PUBLISH}}`
+- **Not** blending display books into one combined rate on the stakeholder cards
+- **Not** putting `{{GRAIN_WINDOW}}` on the stakeholder strip (store it on each book for the grain tab only)
 
-**Self-serve and combined:** unchanged EUR waterfall.
+## Do not
 
-- **GRR** = `(prior + downsell + churn) / prior`
-- **NRR** = `(prior + total_growth − new) / prior`
-- columns = `*_eur_actual`
+- Invent numbers for `{{LEAVE_ALONE}}`
+- Show `{{DO_NOT_DISPLAY_KEY}}` as the displayed target. Store it only as the "do not use" figure.
+- Pick a period in a way that breaks `{{PERIOD_RULE}}`
+- Overwrite a book from `{{DO_NOT_OVERWRITE_FROM}}`
+- Use `{{WRONG_DEFINITION}}` for a displayed book
+- Auto-publish
+- Fill a `{{TOKEN}}` from memory of another team's tables, targets, or rates
 
-Round rates to 1 decimal. `priorM` = beginning ARR / 1e6, 1 decimal.
+## Page
 
-### SQL (run this)
+Glob `{{KPI_PAGE_GLOB}}` and edit the latest. The JSON lives in `<script id="{{DATA_SCRIPT_ID}}">`. Patch `{{BOOKS_OBJECT_PATH}}` in place. The page JS renders cards from that object — do not hardcode numbers in HTML.
 
-Periods: `last_day(current_date)`, the prior three month-ends, and `date '2025-12-31'` (sales-led KR baseline only).
+## Warehouse
+
+Call `{{WAREHOUSE_QUERY_TOOL}}` with:
+
+- Connection: `{{WAREHOUSE_CONNECTION}}`
+- Database: `{{WAREHOUSE_DATABASE}}`
+- Schema: `{{WAREHOUSE_SCHEMA}}`
+
+Fallback: the same SQL via `{{WAREHOUSE_FALLBACK}}` if the first tool is down. If both fail, stop and name the gap — do not invent.
+
+### Query (paste this)
+
+Periods follow `{{PERIOD_RULE}}`. Include `{{BASELINE_PERIOD}}` when that token is set.
 
 ```sql
-with periods as (
-  select last_day(current_date) as d union all
-  select last_day(dateadd(month, -1, current_date)) union all
-  select last_day(dateadd(month, -2, current_date)) union all
-  select last_day(dateadd(month, -3, current_date)) union all
-  select date '2025-12-31'
-),
-sales_led as (
-  select b.period_end_date,
-    sum(b.begin_usd) as prior_amt,
-    sum(b.begin_usd + coalesce(e.down_usd,0) + coalesce(e.churn_usd,0)) as grr_num,
-    sum(coalesce(e.end_usd,0)) as nrr_num
-  from (
-    select p.d as period_end_date, c.company_account_id, c.period_ending_arr_usd as begin_usd
-    from periods p
-    join sonar.cad_sonar_company_arr_monthly c
-      on c.period_end_date = dateadd(month, -12, p.d)::date
-    where c.period_ending_arr_usd > 0
-  ) b
-  left join (
-    select period_end_date, company_account_id,
-      sum(prior_period_arr_usd_actual + arr_growth_usd_actual) as end_usd,
-      sum(case when movement_type = 'Downsell' then arr_growth_usd_actual else 0 end) as down_usd,
-      sum(case when movement_type in ('Churn','Lost','Lapsed','Dormant') then arr_growth_usd_actual else 0 end) as churn_usd
-    from sonar.fct_sales_company_arr_waterfall_yearly
-    where period_end_date in (select d from periods)
-    group by 1, 2
-  ) e
-    on b.company_account_id = e.company_account_id
-    and b.period_end_date = e.period_end_date
-  group by 1
-),
-books as (
-  select 'sales-led' as book, 'yoy' as window, period_end_date,
-    grr_num as retained_or_end,
-    prior_amt,
-    nrr_num as end_amt
-  from sales_led
-  union all
-  select 'online', 'yoy', period_end_date,
-    sum(prior_period_arr_eur_actual) + sum(case when movement_type = 'Downsell' then arr_growth_eur_actual else 0 end) + sum(case when movement_type in ('Churn','Lost','Lapsed','Dormant') then arr_growth_eur_actual else 0 end),
-    sum(prior_period_arr_eur_actual),
-    sum(prior_period_arr_eur_actual) + sum(arr_growth_eur_actual) - sum(case when movement_type = 'New' then arr_growth_eur_actual else 0 end)
-  from sonar.fct_sales_online_arr_waterfall_yearly
-  where period_end_date in (select d from periods)
-  group by 1, 2, 3
-  union all
-  select 'combined', 'yoy', period_end_date,
-    sum(prior_period_arr_eur_actual) + sum(case when movement_type = 'Downsell' then arr_growth_eur_actual else 0 end) + sum(case when movement_type in ('Churn','Lost','Lapsed','Dormant') then arr_growth_eur_actual else 0 end),
-    sum(prior_period_arr_eur_actual),
-    sum(prior_period_arr_eur_actual) + sum(arr_growth_eur_actual) - sum(case when movement_type = 'New' then arr_growth_eur_actual else 0 end)
-  from sonar.fct_sales_combined_arr_waterfall_yearly
-  where period_end_date = last_day(current_date)
-  group by 1, 2, 3
-  union all
-  select 'sales-led', 'mom', period_end_date,
-    sum(prior_period_arr_usd_actual) + sum(case when movement_type = 'Downsell' then arr_growth_usd_actual else 0 end) + sum(case when movement_type in ('Churn','Lost','Lapsed','Dormant') then arr_growth_usd_actual else 0 end),
-    sum(prior_period_arr_usd_actual),
-    sum(prior_period_arr_usd_actual) + sum(arr_growth_usd_actual) - sum(case when movement_type = 'New' then arr_growth_usd_actual else 0 end)
-  from sonar.fct_sales_company_arr_waterfall_monthly
-  where period_end_date = last_day(current_date)
-  group by 1, 2, 3
-  union all
-  select 'online', 'mom', period_end_date,
-    sum(prior_period_arr_eur_actual) + sum(case when movement_type = 'Downsell' then arr_growth_eur_actual else 0 end) + sum(case when movement_type in ('Churn','Lost','Lapsed','Dormant') then arr_growth_eur_actual else 0 end),
-    sum(prior_period_arr_eur_actual),
-    sum(prior_period_arr_eur_actual) + sum(arr_growth_eur_actual) - sum(case when movement_type = 'New' then arr_growth_eur_actual else 0 end)
-  from sonar.fct_sales_online_arr_waterfall_monthly
-  where period_end_date = last_day(current_date)
-  group by 1, 2, 3
-)
-select book, window, period_end_date,
-  round(100.0 * retained_or_end / nullif(prior_amt, 0), 1) as grr_pct,
-  round(100.0 * end_amt / nullif(prior_amt, 0), 1) as nrr_pct,
-  round(prior_amt / 1e6, 1) as prior_m
-from books
-order by book, window, period_end_date
+-- PASTE THE REFRESH QUERY HERE
+-- One row per book × window × period.
+-- Return:
+--   book            -- a Key from the books table
+--   window          -- {{STAKEHOLDER_WINDOW}} or {{GRAIN_WINDOW}}
+--   period_end_date
+--   rate_1          -- {{RATE_1}}, already a percent to 1 decimal, or the numerator and denominator
+--   rate_2          -- {{RATE_2}}, same
+--   prior_amount    -- beginning amount for the card (the page may scale it)
+-- Use the formula on that book's row. Do not use {{WRONG_DEFINITION}}.
 ```
 
-**Do not** also run the waterfall-only sales-led query `(prior + growth − new) / prior` in USD on `fct_sales_company_arr_waterfall_yearly` and treat it as this card. That NRR sits ~1pp above Tableau ELT. The sales-led block above is CAD beginning book + waterfall ending.
+If the warehouse dialect rejects a date function, rewrite that function only. Do not change the formula.
 
-Redshift `dateadd` / `last_day` are the dialect. If `dateadd` fails, use `date_trunc('month', current_date) - interval '1 month'` equivalents.
+Round rates to 1 decimal. Scale the beginning amount the way the page already does.
 
-## Constants (edit here when Ori changes the KR)
+## Constants
 
-Do not pull targets from the warehouse.
+Do not pull targets from the warehouse. Read them from the books table and from `{{TARGET_LABEL}}`, `{{BASELINE_PERIOD}}`, and `{{BASELINE_LABEL}}`.
 
-- Sales-led `grrTarget`: `95.3`
-- Sales-led `nrrTarget`: `122.2`
-- `targetLabel`: `Dec 2026`
-- Sales-led baseline period: `2025-12-31` → `fromLabel` `Dec 2025`
-- Self-serve has **no** company KR (`grrTarget` / `nrrTarget` = `null`)
-- Self-serve YoY trend: **May onward only** (online yearly coverage before mid-2025 is thin; Dec 2025 prior ARR was ~€1.0M)
+After the query returns, check `{{CLOSED_MONTH_CHECKS}}` when that token is set. If a closed month disagrees, stop and show both numbers. Do not silently take the new one.
 
-## Patch `books`
+## Patch the books object
 
-Keep this shape (numbers from the query):
+Keep the shape the page already uses. Fill numbers from the query. Map each display book onto its object. Map the do-not-display book onto the "do not use" fields only.
 
 ```json
-"books": {
+{
   "refreshed": "<today ISO>",
-  "period": "<current month-end>",
-  "periodLabel": "<Mon YYYY>",
-  "window": "yoy",
-  "combinedGrr": 90.6,
-  "combinedNrr": 115.1,
-  "salesLed": { "currency": "USD", "priorM": 331.8, "...trend last 4 YoY months..." },
-  "selfServe": { "currency": "EUR", "priorM": 28.6, "...trend May–current..." }
+  "period": "<current period end>",
+  "periodLabel": "<label>",
+  "window": "{{STAKEHOLDER_WINDOW}}",
+  "doNotUse": {
+    "book": "{{DO_NOT_DISPLAY_KEY}}",
+    "rate1": "<from query>",
+    "rate2": "<from query>"
+  },
+  "{{BOOK_1_KEY}}": {
+    "currency": "{{BOOK_1_CURRENCY}}",
+    "priorAmount": "<scaled beginning amount>",
+    "rate1Target": "{{BOOK_1_RATE_1_TARGET}}",
+    "rate2Target": "{{BOOK_1_RATE_2_TARGET}}",
+    "targetLabel": "{{TARGET_LABEL}}",
+    "trend": []
+  },
+  "{{BOOK_2_KEY}}": {
+    "currency": "{{BOOK_2_CURRENCY}}",
+    "priorAmount": "<scaled beginning amount>",
+    "rate1Target": null,
+    "rate2Target": null,
+    "trend": []
+  }
 }
 ```
 
-Also refresh gap `#03b` “have” with `priorM / 100` on the sales-led book (USD). Do not rewrite other gaps.
+Apply `{{EXTRA_PATCH_RULES}}` after the books patch. If that token is blank, do not rewrite other fields.
 
-Keep the **Source** chips on both book cards. The sales-led dialog must document the Tableau ELT definition (CAD begin + waterfall end) — do not revert its GRR/NRR lines to `(prior + growth − new) / prior`. SQL lives in page JS (`SOURCE_SQL`). **Copy all for an agent** pastes definition + do-nots + SQL. Metabase 397 is a *different* definition (ARR stock YoY %), not this page’s waterfall NRR. Do not overwrite self-serve numbers from Laura’s query.
+Keep the source chips on each display-book card. Each book's dialog must document that row's formula. Do not replace it with `{{WRONG_DEFINITION}}`. Where the page has a "copy for an agent" control, it pastes the definition, the do-nots, and the SQL that was run. `{{DO_NOT_OVERWRITE_FROM}}` is a different definition. Do not copy its numbers onto a book.
 
-Month labels: `Jan` … `Dec` from `period_end_date`.
+Period labels come from `period_end_date`, in the page's existing month style.
+
+`{{BOOK_2_KEY}}` trend starts at `{{BOOK_2_TREND_START}}`. Drop earlier points when that token says coverage is too thin.
 
 ## After the patch
 
-Show the user a 4-row table (sales-led GRR/NRR, self-serve GRR/NRR, vs last month YoY, vs KR if any). Remind them the file is Confidential — open in Island, do not GitHub Pages.
+Show a short table: each display book's `{{RATE_1}}` and `{{RATE_2}}`, versus the prior `{{STAKEHOLDER_WINDOW}}` period, and versus target when the book has one.
+
+Then remind the user of `{{DISTRIBUTION_RULE}}`.
+
+## Edge cases
+
+- **Unfilled tokens:** if a `{{TOKEN}}` is still literal when the skill runs, stop and name the token. Do not guess a table, a target, or a rate.
+- **Query returns no row for a display book:** stop and name the book. Do not leave the old number unlabeled, and do not invent a replacement.
+- **Closed-month check fails:** stop and show the query value next to `{{CLOSED_MONTH_CHECKS}}`.

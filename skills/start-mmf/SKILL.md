@@ -1,120 +1,169 @@
 ---
-name: start-mmf
+name: start-bet
 description: >-
-  Start a Sonar MMF the Growth way: Drive brief, proposed slices, and a lean
-  ticket in the MMF Jira project. Optionally create a GROW Epic parented to that
-  MMF when the bet is ready for eng. Use when a PM spots an opportunity, starts
-  an MMF, intakes a feature, or says "start MMF", "new MMF", "opportunity
-  brief", "should we build X", "intake this", "/start-mmf", or "/mmf". Does not
-  create implementation tickets under the GROW Epic — those wait until after
-  Kickoff (split-mmf-tickets).
+  Start a bet: a short brief, proposed slices, and one lean ticket in the bet
+  project. Optionally create a delivery epic parented to that bet when it is
+  ready for eng. Use when a PM spots an opportunity, starts a bet, intakes a
+  feature, or says "start a bet", "new bet", "opportunity brief", "should we
+  build X", "intake this", "/start-bet", or "/bet". Does not create
+  implementation tickets under the epic — those wait until after refine
+  (the split skill).
 ---
 
-# Start MMF
+# Start bet
 
-Lean intake for Growth. Rich context on Drive; Jira stays thin.
+> **Template.** Fill in every `{{TOKEN}}` in the config block before installing this skill. Leave runtime values in `<angle brackets>` alone — the agent resolves those on each run. Do not invent evidence, metrics, project keys, issue types, or field ids that are not in the config.
+>
+> This skill is what the refine and split templates call `{{UPSTREAM_SKILL}}`. Use the same values here for `{{WORK_ITEM_NAME}}`, `{{WORK_ITEM_PREFIX}}`, `{{WORK_ITEM_PROJECT}}`, `{{EPIC_PREFIX}}`, `{{EPIC_PROJECT}}`, `{{TEAM_FIELD}}`, `{{TEAM_NAME}}`, `{{EPIC_TYPE_FIELD}}`, `{{EPIC_TYPE_RULES}}`, `{{REFINE_SKILL}}`, `{{SPLIT_SKILL}}`, `{{REPO_CONTEXT_SKILL}}`, `{{WORKFLOW_DOC}}`, `{{HANDOFF_SPEC}}`, `{{PRODUCT_SURFACES}}`, `{{TECH_RISK_PROMPTS}}`, and `{{VOICE_RULES}}`.
 
-**Jira hierarchy (Growth):**
-1. **MMF** project ticket (PM initiates here — company pattern)
-2. **GROW Epic** with the MMF as **parent** (squad delivery container)
-3. **GROW Stories/Tasks** under that Epic (after kickoff)
+Lean intake. Rich context in the brief; the issue tracker stays thin.
 
-Matches WoW: **Intake → Triage → Bet lock**. Stops before refine/build. Full spine + specialists: [references/workflow.md](references/workflow.md).
+**Issue hierarchy:**
 
-## Naming note
+1. **Bet ticket** in `{{WORK_ITEM_PROJECT}}` (intake starts here)
+2. **{{EPIC_PREFIX}} epic** with the bet as **parent** (delivery container)
+3. **Child issues** under that epic (after `{{REFINE_SKILL}}`, via `{{SPLIT_SKILL}}`)
 
-Skill id is `start-mmf` (Sonar language). “Opportunity brief” is the Drive artifact + a trigger synonym — not the primary command name.
+Matches the stages **Intake → Triage → Bet lock**. Stops before refine and build. Full spine and specialists: {{WORKFLOW_DOC}}. If that token is blank, this file is the whole procedure.
+
+## Config — fill in once
+
+| Token | Replace with |
+|---|---|
+| `{{WORK_ITEM_NAME}}` | What you call the bet. |
+| `{{WORK_ITEM_PREFIX}}` | Issue-key prefix for the bet. |
+| `{{WORK_ITEM_PROJECT}}` | Project the bet ticket is created in. |
+| `{{BET_ISSUE_TYPE}}` | Issue type to create for the bet. |
+| `{{BET_ISSUE_TYPE_DO_NOT_USE}}` | An issue type that looks right but is wrong. Leave blank if none. |
+| `{{EPIC_PREFIX}}` | Issue-key prefix for the delivery epic. |
+| `{{EPIC_PROJECT}}` | Project the epic is created in. |
+| `{{TEAM_FIELD}}` | Field that records the owning team. Leave blank to skip. |
+| `{{TEAM_FIELD_ID}}` | Custom-field id for `{{TEAM_FIELD}}`, if the tracker needs an id. |
+| `{{TEAM_FIELD_VALUE}}` | Value to write into that field (id or name, whichever the tracker expects). |
+| `{{TEAM_NAME}}` | Team name to show in the brief and in chat. |
+| `{{EPIC_TYPE_FIELD}}` | Field that records the epic type. Leave blank to skip. |
+| `{{EPIC_TYPE_RULES}}` | Which value to set for which kind of bet. |
+| `{{WORKSPACE_ROOT}}` | Workspace root the brief path is relative to. |
+| `{{BRIEF_DIR}}` | Folder for briefs, under `{{WORKSPACE_ROOT}}` or absolute. |
+| `{{BRIEF_TEMPLATE}}` | Path to the brief template. |
+| `{{HANDOFF_SPEC}}` | Path to the lean epic-body spec. |
+| `{{WORKFLOW_DOC}}` | Path to the spine-and-specialists note. Leave blank to skip. |
+| `{{CONTEXT_SOURCES}}` | Connected tools to pull from before asking (analytics, warehouse, chat, meetings, wiki, company knowledge). Skip any that are not connected. |
+| `{{PRODUCT_SURFACES}}` | Surfaces this team ships on. |
+| `{{TECH_RISK_PROMPTS}}` | Early risks to prompt for. Paste yours. |
+| `{{REFINE_SKILL}}` | Skill that locks must-haves before build. |
+| `{{SPLIT_SKILL}}` | Skill that creates child issues after refine. |
+| `{{REPO_CONTEXT_SKILL}}` | Later skill for a multi-repo pass. Leave blank to drop that offer. |
+| `{{PRIORITIZE_SKILL}}` | Skill or ritual for grooming before work in progress. Leave blank to drop that row. |
+| `{{DO_NOT_PUBLISH}}` | Destinations this skill must not publish to unless asked. |
+| `{{VOICE_RULES}}` | Extra voice rules, or "none". |
 
 ## Defaults (tell the user)
 
-- Saving brief to `backlog/mmfs/<slug>-YYYY-MM-DD.md`
-- Creating **one lean MMF-project ticket** after user confirms
-- Creating **GROW Epic** only when user confirms (often at bet lock / when eng will pick up — not forced at first draft)
-- **Not** creating child Stories/Tasks at intake
-- Not publishing to Confluence/Slack unless asked
+- Saving the brief to `{{BRIEF_DIR}}/<slug>-YYYY-MM-DD.md`
+- Creating **one lean bet ticket** in `{{WORK_ITEM_PROJECT}}` after the user confirms
+- Creating the **{{EPIC_PREFIX}} epic** only when the user confirms (often at bet lock, when eng will pick it up — not forced on the first draft)
+- **Not** creating child issues at intake
+- Not publishing to `{{DO_NOT_PUBLISH}}` unless asked
 
 ## Do not
 
 - Invent evidence, metrics, or customer quotes
-- Put the MMF in the GROW project (wrong project)
-- Auto-create GROW Epic without ask
-- Auto-create Stories/Tasks under the Epic
-- Dump the full brief into any Jira description
-- Skip access / SQS-vs-SQC / tracking prompts when the surface is product UI
+- Put the bet ticket in `{{EPIC_PROJECT}}` when that is a different project from `{{WORK_ITEM_PROJECT}}`
+- Use `{{BET_ISSUE_TYPE_DO_NOT_USE}}` when that token is set
+- Auto-create the epic without asking
+- Auto-create child issues under the epic
+- Dump the full brief into any issue description
+- Skip the access, surface, and tracking prompts when the surface is product UI
+- Fill a `{{TOKEN}}` from memory of another team's projects, field ids, or surfaces
 
 ## Steps
 
 ### 0. Resolve paths
 
 ```
-Drive_root = Growth (1H26 Project - CPA3) workspace root
-brief_dir  = <Drive_root>/backlog/mmfs
-slug       = kebab-case short title
-brief_path = <brief_dir>/<slug>-YYYY-MM-DD.md
+workspace_root = {{WORKSPACE_ROOT}}
+brief_dir      = {{BRIEF_DIR}}
+slug           = kebab-case short title
+brief_path     = <brief_dir>/<slug>-YYYY-MM-DD.md
 ```
 
 ### 1. Gather (ask only what's missing)
 
-From conversation + tools (Mixpanel, Atlan/Redshift, Slack, Zoom, Confluence, Glean) pull what you can. Name gaps explicitly.
+From the conversation and `{{CONTEXT_SOURCES}}`, pull what you can. Name gaps explicitly. If a source is not connected, skip it.
 
 Minimum to proceed:
-1. Problem / opportunity in one sentence
-2. Who hurts (persona / segment)
-3. Why now
-4. Draft success signal / KR (even rough)
-5. Surfaces: SQS / SQC / both / other
 
-If too thin, ask 1–3 clarifying questions. Do not invent scope.
+1. Problem or opportunity in one sentence
+2. Who hurts (persona or segment)
+3. Why now
+4. Draft success signal (even rough)
+5. Surfaces, from `{{PRODUCT_SURFACES}}`
+
+If that is too thin, ask 1–3 clarifying questions. Do not invent scope.
 
 ### 2. Write the brief
 
-Use template in [references/brief-template.md](references/brief-template.md).
+Use `{{BRIEF_TEMPLATE}}`. If that token is blank, use the headings below and nothing else.
 
-Must include (keep the **Drive brief short enough for a human to skim in ~1 min** — agents read structure, not essays):
-- **Proposed slices** — 1–2 week shippable chunks. Mark slice 1 as the starting bet.
-- **Open decisions to lock before irreversible tech** — who has access / where it lives / SQS≠SQC
-- **Early risks** — security, perf, dogfood, bulk actions, permissions / abuse
-- **Evidence** — links or "no data yet" (one short section; no novels)
+Keep the brief short enough for a person to skim in about a minute. Agents read structure, not essays.
 
-If context is long (research, quotes), put it in `references/` or link out — not in the main brief.
+- **Proposed slices** — shippable chunks. Mark slice 1 as the starting bet.
+- **Open decisions to lock before irreversible tech** — who has access, where it lives, and where `{{PRODUCT_SURFACES}}` differ
+- **Early risks** — `{{TECH_RISK_PROMPTS}}`
+- **Evidence** — links, or "no data yet" (one short section)
 
-Save to `brief_path`. Show for review.
+If context is long (research, quotes), put it beside the brief or link out — not in the main brief.
 
-### 3. Create MMF ticket (lean) — confirm first
+Save to `brief_path`. Show it for review.
 
-Per [references/jira-lean.md](references/jira-lean.md).
+### 3. Create the bet ticket (lean) — confirm first
 
-Ask: create **MMF project** ticket now? (default yes after brief OK)
+Follow `{{HANDOFF_SPEC}}` for how thin the description stays. If that token is blank, use the description rule below.
 
-On confirm: create via Jira MCP:
-- `projectKey: MMF`
-- `issueTypeName: Initiative` (confusing but correct — do **not** use type "MMF")
-- `additional_fields.customfield_10001: "e923828c-1f51-4f27-844a-fb5bb2160f61"` (**Team = Growth** — always prefill)
+Ask: create the `{{WORK_ITEM_PROJECT}}` ticket now? (Default yes after the brief is accepted.)
 
-Description = TL;DR + brief path + draft KR + surfaces + proposed slices + lock-before-build checklist — **not** the full evidence dump.
+On confirm, create it in the issue tracker:
 
-Update brief with `MMF-XXX`.
+- Project: `{{WORK_ITEM_PROJECT}}`
+- Issue type: `{{BET_ISSUE_TYPE}}`
+- If `{{TEAM_FIELD}}` is set, prefill it with `{{TEAM_FIELD_VALUE}}` (field id `{{TEAM_FIELD_ID}}` when that token is set). Skip the team prefill when those tokens are blank.
 
-### 4. GROW Epic — separate confirm
+Description = a short summary, the brief path, the draft success signal, surfaces, proposed slices, and the lock-before-build checklist. Not the evidence dump.
 
-Ask when they want the GROW Epic:
-- **Now** — if already committing / need a delivery container on the board
-- **Later** — at bet lock / `refine-mmf` (recommended default for early ideas)
+Update the brief with the new `{{WORK_ITEM_PREFIX}}` key.
 
-On confirm: create **Epic** in `GROW` with **parent = MMF-XXX**, Team **Growth**, and required **Eng Epic Type**. Epic body = eng/agent handoff per [jira-lean.md](references/jira-lean.md) (Outcome / Not in / Success-kill / Constraints / Open / Slice 1 done-when / SoT) — **not** a clone of the MMF. Update brief with `GROW-YYY`.
+### 4. Delivery epic — separate confirm
+
+Ask when they want the `{{EPIC_PREFIX}}` epic:
+
+- **Now** — already committing, or they need a delivery container on the board
+- **Later** — at bet lock / `{{REFINE_SKILL}}` (recommended default for early ideas)
+
+On confirm: create an epic in `{{EPIC_PROJECT}}` with **parent = the bet**. Set `{{TEAM_FIELD}}` to `{{TEAM_NAME}}` and `{{EPIC_TYPE_FIELD}}` from `{{EPIC_TYPE_RULES}}` when those tokens are filled in. Skip a field whose token is blank.
+
+Epic body = the eng handoff in `{{HANDOFF_SPEC}}` — not a clone of the bet. If `{{HANDOFF_SPEC}}` is blank, write a short handoff: outcome, not in scope, success and kill criteria, constraints, open questions, slice 1 done-when, and where the brief lives.
+
+Update the brief with the new `{{EPIC_PREFIX}}` key.
 
 ### 5. Hand off
 
 | Next | When | Trigger |
 |---|---|---|
-| Groom / prioritize | Before WIP | Squad / `/prioritize-backlog` |
-| GROW Epic (if deferred) | Bet lock | "create GROW epic for MMF-XXX" |
-| **`refine-mmf`** | Before build | "refine MMF-XXX" / "kick off MMF-XXX" |
-| Child tickets under Epic | After refine | `split-mmf-tickets` — "split GROW-YYY" |
-| Cross-repo context | Multi-repo | Later skill |
+| Groom / prioritize | Before work in progress | `{{PRIORITIZE_SKILL}}`, if that token is set |
+| Epic (if deferred) | Bet lock | "create the epic for <bet key>" |
+| **`{{REFINE_SKILL}}`** | Before build | "refine <bet key>" / "kick off <bet key>" |
+| Child issues under the epic | After refine | `{{SPLIT_SKILL}}` — "split <epic key>" |
+| Cross-repo context | Multi-repo | `{{REPO_CONTEXT_SKILL}}`, if that token is set |
 
-Stop. Do not design the solution unless they invoke `refine-mmf`.
+Stop. Do not design the solution unless they invoke `{{REFINE_SKILL}}`.
+
+## Edge cases
+
+- **Unfilled tokens:** if a `{{TOKEN}}` is still literal when the skill runs, stop and name the token. Do not guess a project, an issue type, or a field id.
+- **User has not confirmed the ticket:** show the brief and stop before any issue-tracker write.
+- **Asked to split or implement:** stop and point at `{{REFINE_SKILL}}`, then `{{SPLIT_SKILL}}`.
 
 ## Voice
 
-Growth CLAUDE.md: conclusion first, plain language, no hype, no invented numbers.
+Conclusion first, plain language, no hype, no invented numbers. Follow `{{VOICE_RULES}}` when that token is set.

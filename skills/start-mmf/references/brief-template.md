@@ -1,4 +1,4 @@
-# MMF brief template (lean — human-skimmable)
+# Bet brief template (lean — human-skimmable)
 
 Target: **~1 screen**. Agents use structure; humans won't read a novel. Long research → link or `references/`, not the main brief.
 
@@ -6,8 +6,8 @@ Target: **~1 screen**. Agents use structure; humans won't read a novel. Long res
 # <Title>
 
 **Date:** YYYY-MM-DD · **PM:** <name> · **Status:** Intake | Bet locked | Refine  
-**MMF:** <MMF-XXX or TBD> · **GROW Epic:** <GROW-YYY or TBD>  
-**Path:** backlog/mmfs/<slug>-YYYY-MM-DD.md
+**Bet:** <Bet-XXX or TBD> · **GROW Epic:** <GROW-YYY or TBD>  
+**Path:** backlog/bets/<slug>-YYYY-MM-DD.md
 
 ## TL;DR
 - Problem (1 line)
@@ -46,7 +46,7 @@ Bullets only — what can go wrong + minimum controls.
 One short table or “No evidence yet” + links.
 
 ## Next
-- [ ] MMF ticket
+- [ ] Bet ticket
 - [ ] GROW Epic at bet lock
-- [ ] refine-mmf
+- [ ] refine-bet
 ```

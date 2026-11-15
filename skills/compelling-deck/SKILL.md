@@ -1,13 +1,13 @@
 ---
 name: compelling-deck
-description: Turns any topic into a persuasive, audience-centred slide deck on the Sonar 2026 template, using a proven arc of hook, agenda, objective and "what's in it for you", then the core content, then a close built on one key takeaway, objection handling and a restated payoff. Use whenever someone wants a presentation, talk, deck or slides that need to land, convince or engage, e.g. "make a deck on X", "I need slides to present Y to the leadership team", "build me a talk about Z", "turn this topic into a compelling presentation", "help me pitch this idea internally", even if they don't say "compelling". Not for customer sales pitches to a named account (use sonar-customer-pitch-deck) or for simply rebranding an existing deck (use sonar-deck-builder directly).
+description: Turns any topic into a persuasive, audience-centred slide deck on the <specify template>, using a proven arc of hook, agenda, objective and "what's in it for you", then the core content, then a close built on one key takeaway, objection handling and a restated payoff. Use whenever someone wants a presentation, talk, deck or slides that need to land, convince or engage, e.g. "make a deck on X", "I need slides to present Y to the leadership team", "build me a talk about Z", "turn this topic into a compelling presentation", "help me pitch this idea internally", even if they don't say "compelling". Not for customer sales pitches to a named account (use sonar-customer-pitch-deck) or for simply rebranding an existing deck (use sonar-deck-builder directly).
 ---
 
 # Compelling Deck
 
 Build a deck that changes what the audience thinks or does, not one that just lists information. Every deck follows the same arc, because it mirrors how people decide whether to pay attention: *why should I care → what will I get → show me → what do I do with this → what about my doubts → remind me why it matters to me.*
 
-The finished deck is built on the Sonar 2026 template with the `sonar-marketing:sonar-deck-builder` skill. This skill owns the story and content; the deck builder owns layouts and branding.
+The finished deck is built on the <specify template> with the <deck building> skill. This skill owns the story and content; the deck builder owns layouts and branding.
 
 ## Step 1: Get the brief, asking only what you must
 

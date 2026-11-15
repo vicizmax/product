@@ -1,0 +1,8 @@
+{
+  "skill_name": "product-brain",
+  "evals": [
+    {"id": 1, "prompt": "Reverse trial: on day 15 we suspend orgs that haven't added a card. I'm designing what the org admin sees when they log in on day 15. My idea: a full-screen paywall modal with the Team price and a big 'Add card' button, plus a small 'continue on Free' link at the bottom. Walk me through it as the user and tell me honestly if it's good.", "expected_output": "Walk-through as the admin on day 15, grounded in suspension (not downgrade) mechanics, pushback on dark-pattern Free link and anxiety, loss-framing alternative, teammates/PR state, measurement and kill rule.", "files": []},
+    {"id": 2, "prompt": "An invited member (not an admin) of a SonarQube Cloud Team org bound to Azure DevOps logs in for the first time. I want them to be able to get their own repo scanning without waiting on the admin. Sketch the flow and tell me where it breaks.", "expected_output": "Persona card, step walk checking Create projects / Execute analysis permissions, templates, Azure AutoScan limits, ask-admin path, mermaid diagram, data to pull.", "files": []},
+    {"id": 3, "prompt": "Single-user Team orgs churn way more than multi-user ones. Brainstorm with me: how do we get a second real person into a new SQC org during the first week? Thinking out loud, not deciding yet.", "expected_output": "Diverge mode: sharp reframe, 5-8 varied options incl. a labelled bold one, grounded in churn numbers and product mechanics (PR comments as loop, member sync), not converging prematurely, one key question.", "files": []}
+  ]
+}

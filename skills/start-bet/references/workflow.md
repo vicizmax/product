@@ -1,74 +1,65 @@
-# Growth AI workflow spine (v2)
-
-Spine skills own **stage + Drive/Jira writes**. Specialists fill one gap; the spine auto-invokes them when needed, shows results, then **confirms before write**.
-
+# Workflow spine
+> **Template.** Fill in every `{{TOKEN}}` before use. This is the note the intake, refine, and split templates call `{{WORKFLOW_DOC}}`.
+>
+> Reuse a token from the template that already defines it. Intake: `notes/start-mmf-skill-template.md`. Refine: `notes/refine-mmf-skill-template.md`. Split: `notes/split-mmf-tickets-skill-template.md`. Telemetry: `notes/mmf-telemetry-skill-template.md`. `{{UPSTREAM_SKILL}}` is the installed name of the intake skill.
+Spine skills own the **stage** and the writes to `{{BRIEF_STORE}}` and `{{ISSUE_TRACKER}}`. Specialists fill one gap. The spine invokes them when needed, shows the results, then **confirms before it writes**.
 ```
-start-mmf
-  → Drive brief + MMF Initiative (confirm)
-  → (optional) GROW Epic parented to MMF
+{{UPSTREAM_SKILL}}
+  → brief + bet ticket (confirm)
+  → (optional) {{EPIC_PREFIX}} epic parented to the bet
        ↓
   grooming / bet lock
        ↓
-  refine-mmf  (+ GROW Epic if missing)
+  {{REFINE_SKILL}}  (+ {{EPIC_PREFIX}} epic if missing)
        │  auto-pull specialists when gaps:
-       │    · mmf-telemetry   (events exist vs needed)
-       │    · mmf-tech-sketch (thin code/context)
-       │    · UX call         (checklist; skill later if needed)
-       │    · MMF DRI         = Assignee on MMF ticket
+       │    · {{TELEMETRY_SKILL}}     (events exist vs needed)
+       │    · {{TECH_SKETCH_SKILL}}   (thin code / context)
+       │    · UX call                 (checklist; a skill later if needed)
+       │    · {{DRI_ROLE}}            = {{DRI_FIELD}} on the bet ticket
        ↓
-  split-mmf-tickets  → Stories/Tasks under GROW Epic
+  {{SPLIT_SKILL}}  → {{CHILD_ISSUE_TYPES}} under the {{EPIC_PREFIX}} epic
        │  thicker code context per child; consume refine outputs
        ↓
   build → validate → ship → watch
 ```
-
 ## Spine vs specialists
-
 | Layer | Skills | Job | Auto? |
 |---|---|---|---|
-| **Spine** | `start-mmf` → `refine-mmf` → `split-mmf-tickets` | Stage gates, brief + Jira SoT | User-triggered (“start MMF”, “kick off”, “split”) |
-| **Specialists** | `mmf-telemetry`, `mmf-tech-sketch`, later `cross-repo-context` | One gap each; propose, don’t invent scope | **Inside the stage** when data missing |
-| **Write gates** | All | Jira / Slack / Confluence | Confirm (or “confirm once for this refine”) |
-
-Do **not** build one mega-skill. Compose. Specialists don’t create tickets unless the spine asks after confirm.
-
-## MMF DRI
-
-**MMF DRI = Assignee on the MMF Initiative ticket.**  
-Not a parallel custom field. Epic/children may have other assignees; the MMF Assignee is the named eng owner. `refine-mmf` must set or confirm it before exit.
-
+| **Spine** | `{{UPSTREAM_SKILL}}` → `{{REFINE_SKILL}}` → `{{SPLIT_SKILL}}` | Stage gates, brief + {{ISSUE_TRACKER}} as the system of record | User-triggered ("start a bet", "kick off", "split") |
+| **Specialists** | `{{TELEMETRY_SKILL}}`, `{{TECH_SKETCH_SKILL}}`, later `{{REPO_CONTEXT_SKILL}}` | One gap each; propose, don't invent scope | **Inside the stage** when data is missing |
+| **Write gates** | All | {{BRIEF_STORE}}, {{ISSUE_TRACKER}}, and {{DO_NOT_PUBLISH}} | Confirm (or "confirm once for this refine") |
+Do **not** build one mega-skill. Compose. Specialists don't create tickets unless the spine asks after confirm.
+## Bet owner
+**{{DRI_ROLE}} = {{DRI_FIELD}} on the bet ticket** (type `{{BET_ISSUE_TYPE}}`).
+Not a parallel custom field. The epic and children may have other assignees. The bet's `{{DRI_FIELD}}` is the named owner, usually `{{DRI_DEFAULT_FUNCTION}}`. `{{REFINE_SKILL}}` must set or confirm it before exit.
 ## What each stage owns
-
 | Stage | Must lock / produce | Leave for later |
 |---|---|---|
-| `start-mmf` | Problem, surfaces, draft KR, slices, lean MMF | Full locks, children, deep code |
-| `refine-mmf` | Must-haves, access, release, tracking gap, UX in/out, thin tech sketch, MMF DRI (Assignee), slice-1 done-when, GROW Epic handoff | Child tickets, file-level design |
-| `split-mmf-tickets` | Children with outcome AC; event names from telemetry gap; repo guess | Shipping code |
-
+| `{{UPSTREAM_SKILL}}` | Problem, surfaces, draft success signal, slices, lean bet ticket | Full locks, children, deep code |
+| `{{REFINE_SKILL}}` | Must-haves, access, release, tracking gap, UX in/out, thin tech sketch, {{DRI_ROLE}} (`{{DRI_FIELD}}`), slice-1 done-when, epic handoff | Child tickets, file-level design |
+| `{{SPLIT_SKILL}}` | Children with outcome acceptance criteria; event names from the telemetry gap; repo guess | Shipping code |
 ## Specialist status
-
-| Specialist | Status | When spine calls it |
+| Specialist | Status | When the spine calls it |
 |---|---|---|
-| Telemetry gap (Mixpanel + known backend) | **Exists** — `mmf-telemetry` | Refine if tracking unnamed or KR unmeasurable |
-| Thin tech sketch | **Planned** (`mmf-tech-sketch`) | Refine if no “where it lives in code” yet |
-| UX involvement | Checklist step in `refine-mmf` | Product UI / new collect flows |
-| Cross-repo context | Later | End of refine or start of split |
-
-Until a specialist folder is missing: spine agent **does the same job inline**. Prefer invoking `mmf-telemetry` when present.
-
+| Telemetry gap (product analytics + known backend) | Invoke `{{TELEMETRY_SKILL}}` when that folder exists | Refine, if tracking is unnamed or the success metric is unmeasurable |
+| Thin tech sketch | `{{TECH_SKETCH_SKILL}}` — inline until that folder exists | Refine, if there is no "where it lives in code" yet |
+| UX involvement | Checklist step in `{{REFINE_SKILL}}` | Product UI, or a new user-facing flow |
+| Cross-repo context | `{{REPO_CONTEXT_SKILL}}`, when that token is set | End of refine, or start of split |
+When a specialist folder is missing, the spine does that job inline. Prefer invoking `{{TELEMETRY_SKILL}}` when it is present.
 ## Naming
-
 | Skill | Triggers |
 |---|---|
-| `start-mmf` | `/start-mmf`, `/mmf`, “start MMF”, “intake” |
-| `refine-mmf` | `/refine-mmf`, `/refine`, `/kickoff`, “refine the MMF”, “kick off” |
-| `split-mmf-tickets` | “split GROW-”, “create implementation tickets” |
-
-## Jira decision
-
+| `{{UPSTREAM_SKILL}}` | `/start-bet`, "start a bet", "intake" |
+| `{{REFINE_SKILL}}` | `/refine`, `/kickoff`, "refine this bet", "kick off" |
+| `{{SPLIT_SKILL}}` | "split <epic key>", "create implementation tickets" |
+## Issue-tracker decisions
 | Confirm? | Artifact |
 |---|---|
-| Yes at intake | MMF Initiative · Team **Growth** (not issue type “MMF”) |
-| Ask (often bet lock / refine) | GROW Epic (parent = MMF), eng/agent handoff body |
-| After refine exit | Children under Epic |
-| On refine | **Assignee on MMF** = MMF DRI |
+| Yes at intake | Bet ticket in `{{WORK_ITEM_PROJECT}}`, type `{{BET_ISSUE_TYPE}}`, team `{{TEAM_NAME}}` when `{{TEAM_FIELD}}` is set. Not issue type `{{BET_ISSUE_TYPE_DO_NOT_USE}}` when that token is set. |
+| Ask (often bet lock / refine) | `{{EPIC_PREFIX}}` epic in `{{EPIC_PROJECT}}` (parent = the bet), eng handoff body |
+| After refine exit | `{{CHILD_ISSUE_TYPES}}` under the epic |
+| On refine | **`{{DRI_FIELD}}` on the bet** = `{{DRI_ROLE}}` |
+## Tokens only in this file
+| Token | Replace with |
+|---|---|
+| `{{TECH_SKETCH_SKILL}}` | Installed name of the thin tech-sketch skill. Leave blank to keep that pass inline inside refine. |
